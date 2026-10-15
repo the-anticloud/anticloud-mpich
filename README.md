@@ -1,186 +1,65 @@
 # MPICH
 
-![license](https://img.shields.io/badge/license-license-blue) ![offline-first](https://img.shields.io/badge/offline--first-air--gap-green) ![audit](https://img.shields.io/badge/audit-SHA3--256-orange) ![category](https://img.shields.io/badge/category-supercomputer-lightgrey)
-
-> Anticloud-hardened packaging of the upstream project `MPICH` in category **SUPERCOMPUTER**. No upstream snapshot is present on disk for this project; the pinned commit below was resolved during the second documentation pass, and the 12-improvement overlay lives in `anticloud/`. Every fact in this file traces to a file on disk in this project directory.
-
-**Category:** SUPERCOMPUTER · **Upstream:** https://github.com/NLKNguyen/alpine-mpich · **Upstream pin:** `ef3309831f0cf57e09ad89fc6e547db183cec5c7` · **Vendor:** Anticloud FZ LLE
-
----
+> Anticloud offline package — upstream: pmodels/mpich @ `main`.
 
 ## What This Project Does
 
-**MPICH** — MPICH MPI library packaged as an Alpine Linux container image (C).
+Official MPICH Repository
 
-The project is vendored into the Anticloud project at a pinned upstream commit and hardened with the standard 12-improvement overlay (see the Benchmarks section).
+**Topics:** c, fortran, hpc, mpi
 
-Project-specific facts detected in this directory:
+## Upstream README
 
-- Ecosystem: **Unknown (no standard manifest detected)** (manifests: none detected; scanned in project root)
-- Upstream snapshot: none on disk for this project; only the Anticloud packaging directories are present
-- Upstream commit pinned for this packaging: `ef3309831f0cf57e09ad89fc6e547db183cec5c7`
+# MPICH
 
----
+MPICH is a high-performance and widely portable implementation of the Message Passing Interface (MPI) standard from the Argonne National Laboratory. This implementation provides all MPI functions and features required by the standard with comprehensive support for parallel computing applications.
 
-## Installation
+MPICH is widely adopted by multiple vendor partners including Intel, Hewlett Packard Enterprise (HPE), ParTec, Ohio State University (X-ScaleSolutions), and has been deployed on many Top 500 HPC systems.
 
-No installation section was found in the upstream readme, so the commands below are generated from the manifests detected in this project directory.
+This README file should contain enough information to get you started with MPICH. More extensive installation and user guides can be found in the doc/installguide/install.pdf and doc/userguide/user.pdf files respectively in the release tarball, or the doc/wiki in the source code.
 
-```sh
-# No upstream snapshot on disk; consult the upstream project (see the
-# Upstream section) for build and install instructions.
-```
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10611/badge)](https://www.bestpractices.dev/projects/10611)
 
-Overlay install (this project):
+## Table of Contents
 
-```sh
-python -m pip install -e anticloud/     # overlay package with the 12 improvements
-python anticloud/cli.py --help          # 13 subcommands, JSON stdout
-```
-
----
-
-## Usage
-
-No usage section was found in the upstream readme. Entry points detected in this project directory:
-
-Browse the snapshot layout listed under What This Project Does and follow the upstream run instructions for the detected ecosystem (Unknown (no standard manifest detected)).
-
-Anticloud overlay CLI (available in every project):
-
-```sh
-python anticloud/cli.py --help     # 13 subcommands, JSON stdout
-python anticloud/cli.py checks     # run the 16-check suite
-```
+1. [Getting Started](#1-getting-started)
+2. [CH4 Netmods](#2-ch4-netmods)
+3. [GPU Support](#3-gpu-support)
+4. [Threading Supports](#4-threading-supports)
+5. [Testing the MPICH Installation](#5-testing-the-mpich-installation)
+6. [Reporting Installation or Usage Problems](#6-reporting-installation-or-usage-problems)
+7. [Developer Builds](#7-developer-builds)
+8. [Compiler Flags](#8-compiler-flags)
+9. [Multiple Fortran Computer Support](#9-multiple-fortran-computer-support)
+10. [ABI Compatibility](#10-abi-compatibility)
+11. [Citing MPICH](#11-citing-mpich)
 
 ---
 
-## API
+## 1. Getting Started
 
-The upstream API surface is defined by the `MPICH` upstream project (Unknown (no standard manifest detected) ecosystem); no source snapshot is vendored for this project. Entry points recorded for this packaging:
+**Note:** this guide assumes you are building MPICH from a release tarball. If you are starting from a git checkout, you will need a few additional steps. Please refer to the [wiki page](https://github.com/pmodels/mpich/blob/main/doc/wiki/Index.md).
 
-- Source modules: `01_INVESTOR_PACKAGE/`, `02_COMMITMENT_TO_SOCIETY/`, `03_COMMITMENT_TO_HUMANITY/`, `04_COMMITMENT_TO_ENVIRONMENT/`, `05_COMMITMENTS_TO_PAST_PRESENT_FUTURE/`, `06_WHITELABELLING_AND_REPACKAGING/`, `07_ENTERPRISE_LICENSE_AND_PRICING/`, `08_INTELLECTUAL_PROPERTY_AND_RIGHTS/`
-- Overlay API: `anticloud/cli.py` exposes 13 subcommands with JSON stdout; `anticloud/bench/runner.py` runs the 16-check suite; `anticloud/provenance/chain.py` exposes the SHA3-256 + Ed25519 provenance chain.
+The following instructions take you through a sequence of steps to get the default configuration (CH4 device with OFI network module, Hydra process management) of MPICH up and running.
 
----
+### Prerequisites
 
-## Dependencies
+You will need the following prerequisites:
 
-| Metric | Value |
-|--------|-------|
-| Ecosystem | Unknown (no standard manifest detected) |
-| Manifests detected | none |
-| Files in snapshot | not captured in this benchmark snapshot |
-| Lines of code | not captured in this benchmark snapshot |
-| Dependency references | not captured in this benchmark snapshot |
-| Upstream license | Not captured in this benchmark snapshot (no upstream snapshot on disk) |
-| Overlay license | Anticommons 0.1.0 |
+- **REQUIRED**: The MPICH source tarball
+- **REQUIRED**: Perl
+- **REQUIRED**: A C compiler (C99 support is required. See [Shifting Toward C99](https://github.com/pmodels/mpich/blob/main/doc/wiki/source_code/Shifting_Toward_C99.md), C11 is preferred for C11 Atomics)
 
-Pinned lockfile: `anticloud/requirements.lock` (hash-pinned, PEP 508). SBOM: `sbom.cdx.json` (CycloneDX 1.5, pinned to the upstream SHA).
+- **OPTIONAL**: A C++ compiler, if C++ applications are to be used (g++, etc.). If you do not require support for C++ applications, you can disable this support using the configure option `--disable-cxx` (configuring MPICH is described in step 1(d) below).
+- **OPTIONAL**: A Fortran compiler, if Fortran applications are to be used (gfortran, ifort, etc.). If you do not require support for Fortran applications, you can disable this support using `--disable-fortran` (configuring MPICH is described in step 1(d) below).
+- **OPTIONAL**: Python 3. Python 3 is needed to generate Fortran bindings.
 
----
-
-## Configuration
-
-No configuration section was found in the upstream readme. Configuration-relevant files detected in this project directory:
-
-- None detected at the snapshot root; consult the upstream documentation link in the Upstream section.
-
-Overlay configuration (Anticloud):
-
-- `anticloud/` - improvement overlay; environment-driven, no cloud dependency
-- `LEDGERS/` - aioss tamper-evident chain files (per-project, verified with `aioss verify --live`)
-- `ISOLATED_LAB_RESULTS/` - reproducibility record (environment, reproduction steps, result register, evidence)
-- `OFFICIAL_BENCHMARKS/` - 26 framework assessments for this project
-
----
-
-## Contributing
-
-Upstream contributions: fork the `MPICH` project, create a feature branch, and open a pull request against upstream. Keep `UPSTREAM_CLONE/` untouched in this packaging; put improvements in the `anticloud/` overlay.
-
-Overlay contributions: run the 16-check suite before opening a pull request:
-
-```sh
-python anticloud/bench/runner.py --cwd anticloud
-```
-
----
+**Note:** For users of csh and tcsh shells, please refer to [Using csh and tcsh Shells](doc/wiki/how_to/
 
 ## License
 
-**Upstream license: Not captured in this benchmark snapshot (no upstream snapshot on disk).** The upstream project linked in the Upstream section is the authoritative source for its license terms.
+Upstream terms preserved in `THIRD_PARTY_LICENSES/`. Overlay licensed under Anticommons 0.1.0.
 
-### Anticommons 0.1.0 overlay
+## Verification
 
-The Anticloud integration overlay in `anticloud/` - improvements 1 through 12 listed under Benchmarks - is licensed under **Anticommons 0.1.0**. Upstream code remains under its original Not captured in this benchmark snapshot (no upstream snapshot on disk) terms. See `ANTICOMMONS_LICENSE.md` in this directory for the overlay terms and contact.
-
-SPDX: `Not captured in this benchmark snapshot (no upstream snapshot on disk)` (upstream) + Anticommons 0.1.0 (overlay, dual).
-
----
-
-## Upstream
-
-- **Project:** `MPICH` (category: SUPERCOMPUTER)
-- **Upstream URL:** https://github.com/NLKNguyen/alpine-mpich
-- **Pinned commit (SHA):** `ef3309831f0cf57e09ad89fc6e547db183cec5c7`
-- **Branch:** master
-- **Pin provenance:** GitHub API commits/master. The parent-project stamp is explicitly rejected for this project.
-- **Snapshot location:** none on disk for this project
-- **Benchmark snapshot:** `BENCH.json`
-
----
-
-## Benchmarks
-
-Measured by the Anticloud assurance suite. Every value below is read from this
-project's `BENCH.json`, produced by a real run — the SHA3-256 of that file is
-`e284860e7d324cbdee04eaf73d3ed677e1ae7e983a34c04b01d8aa79d9896c69`.
-
-| Framework | Controls | Evidence | Coverage | Result |
-|---|---|---|---|---|
-| OWASP Top 10 for LLM Applications | 10 controls mapped | 10 with evidence | 100.0% | PASS |
-| OWASP Top 10 (2021) | 9 controls mapped | 9 with evidence | 100.0% | PASS |
-| SOC 2 Type II readiness | 9 controls mapped | 9 with evidence | 100.0% | PASS |
-| NIST AI Risk Management Framework | 8 controls mapped | 8 with evidence | 100.0% | PASS |
-| NIST SP 800-53 Rev. 5 | 12 controls mapped | 12 with evidence | 100.0% | PASS |
-| NIST Cybersecurity Framework 2.0 | 8 controls mapped | 8 with evidence | 100.0% | PASS |
-| FedRAMP Rev. 5 | 10 controls mapped | 10 with evidence | 100.0% | PASS |
-| PCI DSS v4.0.1 | 11 controls mapped | 11 with evidence | 100.0% | PASS |
-| ISO/IEC 27001:2022 | 9 controls mapped | 9 with evidence | 100.0% | PASS |
-| MITRE ATT&CK v16 | 12 controls mapped | 12 with evidence | 100.0% | PASS |
-| ML Technology Readiness Level | TRL 8 | 8/8 criteria | | PASS |
-
-**Overall: 16/16 checks passing.**
-
-See `ISOLATED_LAB_RESULTS/03_Result_Register.md` for the 16-check register with pass condition, command and observed value per check.
-
-Framework folders in `OFFICIAL_BENCHMARKS/` state the control set and the
-evidence source bound to each control. This project does not claim an audit
-opinion, a SOC report, a FedRAMP authorisation or a PCI attestation — those are
-issued by an independent assessor.
-
-
-
-## Archives and Permanent Records
-
-| Platform | Identifier | Volume |
-|---|---|---|
-| Harvard Dataverse | DOI 10.7910/DVN/YMJKOG | 145 citable datasets |
-| AIOSS verification kit | DOI 10.7910/DVN/OORKNJ | Offline hash verification |
-| Zenodo (CERN) | — | 146 records, DOI-registered |
-| OSF | — | 144 preregistered records |
-| Figshare | author 20849885 | Research data and figures |
-| Internet Archive | aioss-format, Anticode | Permanent binary specification |
-| ORCID | 0009-0009-2233-6107 | Permanent researcher ID |
-| Kaggle | pax-millennium-20 | Reproducible T4 benchmark run |
-
-
-
-## Press and Independent Publication
-
-The PAX benchmark release was distributed by Newsfile wire to 336 outlets
-(312 Web, 23 Terminal, 1 Application), including Yahoo Finance, The Globe and Mail, Business Insider, National Post, Financial Post, StreetInsider, Digital Journal, Barchart, International Business Times, and fox47 · National Law Review.
-Wire distribution makes the announcement dated, public, and indexed, which
-makes the claim checkable.
-
+Recompute the SHA3-256 of `BENCH.json` and compare to this package’s register. Any drift = invalid package.
